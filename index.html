@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Google Analytics (GA4, property "Homepage", account slarkprime@gmail.com) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QZ9W3LV6Y0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-QZ9W3LV6Y0');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zhuohan Wang</title>
+<meta name="description" content="Zhuohan Wang, M.S. student at Harvard University, working on reasoning and efficient training and decoding.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<!-- GENERATED from site/template.html by scripts/build.py. Edit the template, not index.html. -->
+<style>
+  :root {
+    --bg: #fcfcfa;
+    --text: #1d1d1f;
+    --muted: #5f6368;
+    --faint: #8a8f96;
+    --rule: #e6e4df;
+    --accent: #a51c30;
+    --accent-soft: #f6e9eb;
+    --gold: #8a6a12;
+    --gold-soft: #f7f0dc;
+    --chip: #f0efeb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141416;
+      --text: #e8e8ea;
+      --muted: #a4a8ae;
+      --faint: #7d828a;
+      --rule: #2a2b2f;
+      --accent: #e0707f;
+      --accent-soft: #3a1f25;
+      --gold: #d9b95a;
+      --gold-soft: #332b14;
+      --chip: #232428;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 780px; margin: 0 auto; padding: 56px 20px 40px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
+
+  .intro { display: flex; gap: 32px; align-items: flex-start; justify-content: space-between; }
+  .intro h1 { font-size: 2.3rem; line-height: 1.15; margin: 0 0 6px; }
+  .role { color: var(--muted); margin: 0 0 14px; }
+  .contact { margin: 0 0 12px; font-size: 0.95rem; }
+  .contact code { font: inherit; color: var(--text); }
+  .links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-weight: 500; font-size: 0.95rem; }
+  .photo, .photo-fallback {
+    width: 148px; height: 148px; border-radius: 50%; flex: none; object-fit: cover;
+    border: 1px solid var(--rule);
+  }
+  .photo-fallback {
+    display: grid; place-items: center; background: var(--chip); color: var(--faint);
+    font: 600 2.2rem "Source Serif 4", Georgia, serif;
+  }
+
+  section { margin-top: 44px; }
+  h2 {
+    font-size: 1.35rem; margin: 0 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--rule);
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  }
+  p { margin: 0 0 12px; }
+
+  .news { list-style: none; padding: 0; margin: 0; }
+  .news li { display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 3px 0; }
+  .news time { color: var(--faint); font-variant-numeric: tabular-nums; font-size: 0.92rem; padding-top: 1px; }
+
+  .group + .group { margin-top: 26px; }
+  .group h4 {
+    font: 600 0.78rem Inter, sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 4px;
+  }
+  .papers { list-style: none; padding: 0; margin: 0; }
+  .paper {
+    display: grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: start;
+    padding: 16px 0; border-bottom: 1px solid var(--rule);
+  }
+  .paper:last-child { border-bottom: none; }
+  .thumb {
+    background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 6px;
+    display: flex; align-items: center; justify-content: center; min-height: 96px;
+  }
+  .thumb img { width: 100%; height: auto; display: block; }
+  .paper.nofig { grid-template-columns: 1fr; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 4px; font-size: 0.8rem; }
+  .badge { font-weight: 600; padding: 1px 8px; border-radius: 4px; background: var(--chip); color: var(--muted); }
+  .badge.pub { background: var(--accent-soft); color: var(--accent); }
+  .badge.note { background: var(--gold-soft); color: var(--gold); }
+  .venue { color: var(--faint); }
+  .paper h3 { font-size: 1.02rem; line-height: 1.4; font-weight: 600; margin: 0 0 3px; }
+  .authors { color: var(--muted); font-size: 0.92rem; margin: 0 0 4px; }
+  .authors b { color: var(--text); font-weight: 600; }
+  .authors .role { color: var(--faint); }
+  .tldr { font-size: 0.92rem; margin: 0 0 4px; }
+  .links a + a::before { content: ""; }
+  .paper .links { font-size: 0.88rem; gap: 12px; display: flex; }
+  .footnote { color: var(--faint); font-size: 0.85rem; margin-top: 10px; }
+
+  .timeline { list-style: none; padding: 0; margin: 0; }
+  .timeline li { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 7px 0; }
+  .timeline .org { font-weight: 600; }
+  .timeline .what { color: var(--muted); font-size: 0.92rem; grid-column: 1; }
+  .timeline .when { color: var(--faint); font-size: 0.9rem; font-variant-numeric: tabular-nums; grid-row: 1; grid-column: 2; }
+
+  footer { margin-top: 56px; color: var(--faint); font-size: 0.82rem; }
+
+  @media (max-width: 600px) {
+    .paper { grid-template-columns: 1fr; gap: 10px; }
+    .thumb img { max-height: 170px; width: auto; max-width: 100%; }
+    main { padding: 32px 16px; }
+    .intro { flex-direction: column-reverse; gap: 18px; }
+    .photo, .photo-fallback { width: 112px; height: 112px; }
+    .intro h1 { font-size: 2rem; }
+    .news li { grid-template-columns: 1fr; gap: 0; }
+    .timeline li { grid-template-columns: 1fr; }
+    .timeline .when { grid-row: auto; grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="intro">
+    <div>
+      <h1>Zhuohan Wang</h1>
+      <p class="role">M.S. Student, Harvard University<br>Ex-MERL, Ex-SenseTime</p>
+      <p class="contact">Email: <code>zhuohan_wang [at] g.harvard.edu</code></p>
+      <nav class="links">
+        <a href="cv.pdf">CV</a>
+        <a href="https://scholar.google.com/citations?user=782XoUYAAAAJ&amp;hl=en">Google Scholar</a>
+      </nav>
+    </div>
+    <img class="photo" src="photo.jpg" alt="Photo of Zhuohan Wang"
+         onerror="this.outerHTML='<div class=&quot;photo-fallback&quot; aria-hidden=&quot;true&quot;>ZW</div>'">
+  </header>
+
+  <section id="about">
+    <p>I am a master's student in Computational Science and Engineering at Harvard University. I received my B.Eng. in Computer and Data Engineering from City University of Hong Kong, ranked first in my class and graduating summa cum laude, and worked with Prof. <a href="https://eelmpo.github.io/">Lai-Man Po</a> on parameter-efficient fine-tuning. I spent a year as an intern on the LLM post-training team at SenseTime Research, mentored by Dr. <a href="https://scholar.google.com/citations?user=PnNAAasAAAAJ&amp;hl=en">Litong Feng</a>. I also worked with Dr. <a href="https://ymy4323460.github.io/">Mengyue Yang</a> on causal reasoning in LLMs. In 2026 I was a research intern at MERL with Dr. <a href="https://www.merl.com/people/pwang">Pu (Perry) Wang</a> and Dr. <a href="https://www.merl.com/people/cherian">Anoop Cherian</a>.</p>
+    <p>My long-term goal is to build systems that can think at least as well as the best human researchers, across intellectual domains, in a way that keeps improving with scale. I am interested in automated discovery and in reasoning in language, vision and other modalities. I also work on efficient training and decoding.</p>
+    <p>I am also exploring a startup that applies AI to a real e-commerce business. Outside research, I enjoy investing and playing badminton. I am always happy to discuss shared interests, so feel free to reach out.</p>
+  </section>
+
+  <section id="news">
+    <h2>News</h2>
+    <ul class="news">
+      <li><time>Sep 2026</time><span><a href="https://github.com/slark-prime/OracleLadder">OracleLadder</a> is accepted to NeurIPS 2026 and nominated for an oral presentation.</span></li>
+      <li><time>Sep 2026</time><span><a href="https://openreview.net/forum?id=kPJe4GjLzi">D-PACE</a> is accepted to NeurIPS 2026 as a Spotlight.</span></li>
+      <li><time>May 2026</time><span>Started a research internship at MERL (Mitsubishi Electric Research Laboratories).</span></li>
+      <li><time>Sep 2025</time><span>Started my M.S. at Harvard University.</span></li>
+      <li><time>Sep 2025</time><span><a href="https://arxiv.org/abs/2506.09853">Causal Sufficiency and Necessity Improves Chain-of-Thought Reasoning</a> is accepted to NeurIPS 2025.</span></li>
+      <li><time>Jun 2025</time><span>Graduated from City University of Hong Kong.</span></li>
+      <li><time>Jul 2024</time><span>Joined SenseTime Research as an algorithm researcher intern.</span></li>
+    </ul>
+  </section>
+
+  <section id="publications">
+    <h2>Selected Publications</h2>
+    <div class="pubs">
+    <div class="group">
+      <h4>Reasoning</h4>
+      <ul class="papers">
+      <li class="paper">
+        <a class="thumb" href="figs/oracleladder.png"><img src="figs/oracleladder.png" alt="Figure from the paper"></a>
+        <div class="body">
+          <div class="meta"><span class="badge pub">NeurIPS 2026</span><span class="badge note">Oral nomination</span></div>
+          <h3>Solving Every Step Is Not Enough: Milestone Oracles Reveal a Composition Gap in LLM Math Reasoning</h3>
+          <p class="authors"><b>Zhuohan Wang</b> <span class="role">(project lead)</span>, Haoran Ma, Tianyu Wu, Yuanlin Duan, Zichun Liao, Jieming Yu</p>
+          <p class="tldr">LLMs can solve every step of a math problem on its own and still fail the whole problem, even when given a roadmap and every step&#x27;s answer. OracleLadder locates the failure with increasing levels of oracle help. This composition gap is the largest of five failure types for all six models (8B to 671B), covering 33 to 48% of problems.</p>
+          <div class="links"><a href="https://arxiv.org/abs/2609.32235">arXiv</a><a href="https://openreview.net/forum?id=BwSWaq4eEw">Paper</a><a href="https://github.com/slark-prime/OracleLadder">Code</a></div>
+        </div>
+      </li>
+      <li class="paper">
+        <a class="thumb" href="figs/causalcot.png"><img src="figs/causalcot.png" alt="Figure from the paper"></a>
+        <div class="body">
+          <div class="meta"><span class="badge pub">NeurIPS 2025</span></div>
+          <h3>Causal Sufficiency and Necessity Improves Chain-of-Thought Reasoning</h3>
+          <p class="authors">Xiangning Yu*, <b>Zhuohan Wang*</b>, Linyi Yang, Haoxuan Li, Anjie Liu, Xiao Xue, Jun Wang, Mengyue Yang</p>
+          <p class="tldr">A causal view of chain-of-thought (probability of sufficiency and necessity) that identifies which reasoning steps are essential. Pruning the rest cuts 20 to 60% of tokens on hard benchmarks at comparable accuracy.</p>
+          <div class="links"><a href="https://arxiv.org/abs/2506.09853">arXiv</a><a href="https://github.com/yxn9191/causalmath">Code</a></div>
+        </div>
+      </li>
+      </ul>
+    </div>
+    <div class="group">
+      <h4>Efficient Training and Inference</h4>
+      <ul class="papers">
+      <li class="paper">
+        <a class="thumb" href="figs/dpace.png"><img src="figs/dpace.png" alt="Figure from the paper"></a>
+        <div class="body">
+          <div class="meta"><span class="badge pub">NeurIPS 2026</span><span class="badge note">Spotlight</span></div>
+          <h3>D-PACE: Dynamic Position-Aware Cross-Entropy for Parallel Speculative Drafting</h3>
+          <p class="authors">Tianyu Wu, Yu Yao, Zhenting Qi, Han Zheng, Chengxi Zhang, <b>Zhuohan Wang</b>, Haoran Ma, Zichun Liao, Himabindu Lakkaraju, Ju Li, Yilun Du</p>
+          <p class="tldr">A training loss for parallel speculative drafters that weights each draft position by how much it currently limits the accepted length. It improves wall-clock speedup with 2.3% training overhead.</p>
+          <div class="links"><a href="https://openreview.net/forum?id=kPJe4GjLzi">Paper</a><a href="https://github.com/Lucas-TY/D-PACE">Code</a></div>
+        </div>
+      </li>
+      <li class="paper">
+        <a class="thumb" href="figs/sbora.png"><img src="figs/sbora.png" alt="Figure from the paper"></a>
+        <div class="body">
+          <div class="meta"><span class="badge pub">ICONIP 2024</span></div>
+          <h3>SBoRA: Low-Rank Adaptation with Regional Weight Updates</h3>
+          <p class="authors">Lai-Man Po, Y. Liu, H. Wu, T. Zhang, W.-Y. Yu, <b>Zhuohan Wang</b>, Z. Jiang, K. Li</p>
+          <p class="tldr">A LoRA variant that initializes one low-rank matrix with orthogonal standard-basis vectors, so only a few rows or columns of each weight change. It halves LoRA&#x27;s trainable parameters, or doubles its rank at the same budget, and improves commonsense and arithmetic reasoning.</p>
+          <div class="links"><a href="https://arxiv.org/abs/2407.05413">arXiv</a><a href="https://github.com/cityuhkai/SBoRA">Code</a></div>
+        </div>
+      </li>
+      </ul>
+    </div>
+    </div>
+    <p class="footnote">* equal contribution. Full list on <a href="https://scholar.google.com/citations?user=782XoUYAAAAJ&amp;hl=en">Google Scholar</a>.</p>
+  </section>
+
+
+  <footer>Last updated September 2026</footer>
+</main>
+</body>
+</html>
