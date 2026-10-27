@@ -1,0 +1,375 @@
+WEBVTT
+
+1
+00:00:00.350 --> 00:00:02.153
+You have probably done this yourself.
+
+2
+00:00:02.173 --> 00:00:05.643
+You work out every piece of a hard problem,
+and still get the answer wrong,
+
+3
+00:00:05.663 --> 00:00:08.620
+because one piece never makes it into the
+final step.
+
+4
+00:00:08.640 --> 00:00:12.950
+Language models do the same, even when we hand
+them the answer to every step.
+
+5
+00:00:12.970 --> 00:00:18.415
+This is OracleLadder, our NeurIPS 2026 paper
+on where LLM math reasoning breaks.
+
+6
+00:00:19.465 --> 00:00:21.175
+Here is a short geometry problem.
+
+7
+00:00:21.195 --> 00:00:23.706
+Line p is y = 2x − 1.
+
+8
+00:00:23.726 --> 00:00:29.197
+Through the point (2, 3) on p, draw the line q
+perpendicular to p.
+
+9
+00:00:29.217 --> 00:00:34.418
+Find the area of the convex quadrilateral that
+p, q, and the two axes enclose.
+
+10
+00:00:35.022 --> 00:00:38.268
+Qwen3-8B, a 2025 model, with thinking turned
+off,
+
+11
+00:00:38.288 --> 00:00:40.688
+gets it wrong in all eight attempts.
+
+12
+00:00:41.291 --> 00:00:42.661
+But which part did it fail?
+
+13
+00:00:43.265 --> 00:00:47.265
+The answer decides what to fix, whether you
+train reasoning models,
+
+14
+00:00:47.285 --> 00:00:49.325
+compare them, or build benchmarks.
+
+15
+00:00:50.025 --> 00:00:53.299
+A benchmark score records only the final
+answer.
+
+16
+00:00:53.903 --> 00:00:58.407
+It cannot tell whether the model failed to
+plan, to execute a step,
+
+17
+00:00:58.427 --> 00:01:02.006
+to combine correct steps, or hit a step out of
+reach.
+
+18
+00:01:02.692 --> 00:01:06.828
+So we hold the problem fixed, and control what
+the model is told.
+
+19
+00:01:06.848 --> 00:01:09.516
+A strong teacher model, GPT-5.4 Thinking,
+
+20
+00:01:09.536 --> 00:01:12.467
+reads the problem and its reference solution,
+
+21
+00:01:12.487 --> 00:01:15.090
+and splits the solution into milestones:
+
+22
+00:01:15.110 --> 00:01:19.306
+small standalone problems, each with a gold
+answer we can check.
+
+23
+00:01:19.910 --> 00:01:23.389
+Automatic checks drop milestones that give the
+answer away.
+
+24
+00:01:23.409 --> 00:01:28.153
+The teacher never sees the models we test, so
+every model gets the same roadmap.
+
+25
+00:01:28.757 --> 00:01:31.497
+Here, milestone 1 finds line q.
+
+26
+00:01:32.100 --> 00:01:36.005
+Milestone 2 sets up where p crosses the
+x-axis.
+
+27
+00:01:36.025 --> 00:01:38.869
+The final step stays hidden, because its
+answer is the solution.
+
+28
+00:01:39.566 --> 00:01:44.349
+A symbolic verifier grades every answer, the
+same way every time.
+
+29
+00:01:45.033 --> 00:01:49.820
+First, the milestone test. Can the model solve
+each milestone on its own?
+
+30
+00:01:49.840 --> 00:01:54.751
+Qwen3 solves milestone 1 in 8 of 8 attempts,
+and milestone 2 in 8 of 8.
+
+31
+00:01:55.447 --> 00:01:56.364
+It passes.
+
+32
+00:01:57.046 --> 00:01:59.987
+Then we climb a ladder of help on the full
+problem.
+
+33
+00:02:00.007 --> 00:02:02.866
+Rung 1: no help. 0 of 8.
+
+34
+00:02:02.886 --> 00:02:06.299
+Rung 2: we add the roadmap. 0 of 8.
+
+35
+00:02:07.112 --> 00:02:13.346
+Rung 3: the roadmap, plus both milestone
+answers. Still 0 of 8.
+
+36
+00:02:14.023 --> 00:02:16.209
+It can solve each step alone.
+
+37
+00:02:16.229 --> 00:02:18.438
+It is handed the answer to every milestone.
+
+38
+00:02:18.458 --> 00:02:20.029
+It still cannot finish.
+
+39
+00:02:20.049 --> 00:02:24.247
+We call this a composition gap: every
+milestone passes,
+
+40
+00:02:24.267 --> 00:02:27.258
+yet no rung of help solves the problem.
+
+41
+00:02:27.943 --> 00:02:29.653
+What does this failure look like?
+
+42
+00:02:29.673 --> 00:02:31.794
+We saved and read every answer it gave with
+
+43
+00:02:31.814 --> 00:02:34.459
+the roadmap and both milestone answers in
+hand.
+
+44
+00:02:34.479 --> 00:02:37.664
+Every attempt finds all four axis intercepts
+correctly.
+
+45
+00:02:37.684 --> 00:02:42.431
+But every attempt leaves out the corner (2,
+3), where p and q meet.
+
+46
+00:02:42.451 --> 00:02:45.063
+One attempt even computes that point,
+
+47
+00:02:45.083 --> 00:02:48.636
+then drops it, because it is not on an axis.
+
+48
+00:02:48.656 --> 00:02:52.928
+The most common answer is 65/4, the area of
+the wrong shape.
+
+49
+00:02:53.532 --> 00:02:58.365
+The real quadrilateral keeps that corner. Its
+area is 19/4.
+
+50
+00:02:58.385 --> 00:03:01.009
+Every step is right. The assembly is wrong.
+
+51
+00:03:02.290 --> 00:03:05.022
+Crossing the two tests gives five gaps.
+
+52
+00:03:05.042 --> 00:03:07.428
+If the model passes the milestone test,
+
+53
+00:03:07.448 --> 00:03:10.347
+and the roadmap is enough, it is a roadmap
+gap.
+
+54
+00:03:11.044 --> 00:03:14.492
+If it needs the answers, a milestone-execution
+gap.
+
+55
+00:03:15.096 --> 00:03:17.394
+If nothing works, a composition gap.
+
+56
+00:03:17.998 --> 00:03:22.022
+If a milestone fails on its own, help can fill
+that step:
+
+57
+00:03:22.042 --> 00:03:26.299
+a missing-milestone gap. Or nothing works: a
+capability gap.
+
+58
+00:03:26.999 --> 00:03:31.182
+We ran OracleLadder on 354 NuminaMath
+problems,
+
+59
+00:03:31.202 --> 00:03:37.683
+and six open models from 2024 and 2025, from
+8B to 671B parameters.
+
+60
+00:03:37.703 --> 00:03:42.589
+For every model, the composition gap is the
+largest of the five gaps,
+
+61
+00:03:42.609 --> 00:03:44.963
+covering 33–48% of problems.
+
+62
+00:03:44.983 --> 00:03:48.477
+Our verifier is strict, so some of these are
+grading errors.
+
+63
+00:03:49.174 --> 00:03:54.150
+After removing problems that an LLM review
+flags as grading errors,
+
+64
+00:03:54.170 --> 00:03:55.885
+it still covers 24–37%.
+
+65
+00:03:56.581 --> 00:03:59.644
+What remains mixes roadmaps that miss a step,
+
+66
+00:03:59.664 --> 00:04:03.501
+with real failures to combine, like the one we
+just saw.
+
+67
+00:04:04.694 --> 00:04:07.275
+One accuracy number hides real differences.
+
+68
+00:04:07.295 --> 00:04:12.446
+DeepSeek-V3.1 has the higher per-attempt
+accuracy:
+
+69
+00:04:12.466 --> 00:04:16.481
+28.4%, against 25.7% for gpt-oss-20b.
+
+70
+00:04:16.501 --> 00:04:22.180
+But gpt-oss solves more problems in at least
+one of eight tries,
+
+71
+00:04:22.200 --> 00:04:28.611
+161 against 143, and milestone help widens the
+lead, to 214 against 183.
+
+72
+00:04:29.299 --> 00:04:32.402
+Is the roadmap real information, or just more
+text?
+
+73
+00:04:32.422 --> 00:04:37.774
+On AIME 2024 and 2025, a matched roadmap
+recovers 45% of failed problems.
+
+74
+00:04:37.794 --> 00:04:42.735
+A roadmap from another problem, or a generic
+one, recovers 13%.
+
+75
+00:04:42.755 --> 00:04:46.575
+The pattern holds with a second teacher, and
+in code generation.
+
+76
+00:04:47.268 --> 00:04:48.630
+Three takeaways.
+
+77
+00:04:48.650 --> 00:04:51.869
+Solving each step does not mean a model can
+combine them.
+
+78
+00:04:51.889 --> 00:04:55.642
+Measure how much help a model needs, not only
+whether it is right.
+
+79
+00:04:55.662 --> 00:04:58.013
+And separate grading errors, missing steps,
+
+80
+00:04:58.033 --> 00:05:01.981
+and composition failures, because each points
+to a different fix.
+
+81
+00:05:02.001 --> 00:05:06.540
+Data, roadmaps, prompts, and code are open.
+Come find us at our poster.
+

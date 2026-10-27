@@ -1,0 +1,161 @@
+WEBVTT
+
+1
+00:00:00.350 --> 00:00:02.153
+You have probably done this yourself.
+
+2
+00:00:02.173 --> 00:00:05.643
+You work out every piece of a hard problem,
+and still get the answer wrong,
+
+3
+00:00:05.663 --> 00:00:08.620
+because one piece never makes it into the
+final step.
+
+4
+00:00:08.640 --> 00:00:12.950
+Language models do the same, even when we hand
+them the answer to every step.
+
+5
+00:00:12.970 --> 00:00:18.415
+This is OracleLadder, our NeurIPS 2026 paper
+on where LLM math reasoning breaks.
+
+6
+00:00:19.165 --> 00:00:20.875
+Here is a short geometry problem.
+
+7
+00:00:20.895 --> 00:00:23.406
+Line p is y = 2x − 1.
+
+8
+00:00:23.426 --> 00:00:28.897
+Through the point (2, 3) on p, draw the line q
+perpendicular to p.
+
+9
+00:00:28.917 --> 00:00:34.118
+Find the area of the convex quadrilateral that
+p, q, and the two axes enclose.
+
+10
+00:00:34.722 --> 00:00:37.968
+Qwen3-8B, a 2025 model, with thinking turned
+off,
+
+11
+00:00:37.988 --> 00:00:40.388
+gets it wrong in all eight attempts.
+
+12
+00:00:40.991 --> 00:00:42.361
+But which part did it fail?
+
+13
+00:00:42.965 --> 00:00:46.965
+The answer decides what to fix, whether you
+train reasoning models,
+
+14
+00:00:46.985 --> 00:00:49.405
+compare them, or build benchmarks.
+
+15
+00:00:49.425 --> 00:00:54.212
+First, the milestone test. Can the model solve
+each milestone on its own?
+
+16
+00:00:54.232 --> 00:00:59.143
+Qwen3 solves milestone 1 in 8 of 8 attempts,
+and milestone 2 in 8 of 8.
+
+17
+00:00:59.839 --> 00:01:01.118
+It passes.
+
+18
+00:01:01.138 --> 00:01:04.079
+Then we climb a ladder of help on the full
+problem.
+
+19
+00:01:04.099 --> 00:01:06.958
+Rung 1: no help. 0 of 8.
+
+20
+00:01:06.978 --> 00:01:10.391
+Rung 2: we add the roadmap. 0 of 8.
+
+21
+00:01:11.204 --> 00:01:17.795
+Rung 3: the roadmap, plus both milestone
+answers. Still 0 of 8.
+
+22
+00:01:17.815 --> 00:01:20.001
+It can solve each step alone.
+
+23
+00:01:20.021 --> 00:01:22.230
+It is handed the answer to every milestone.
+
+24
+00:01:22.250 --> 00:01:23.821
+It still cannot finish.
+
+25
+00:01:23.841 --> 00:01:28.039
+We call this a composition gap: every
+milestone passes,
+
+26
+00:01:28.059 --> 00:01:31.415
+yet no rung of help solves the problem.
+
+27
+00:01:31.435 --> 00:01:35.618
+We ran OracleLadder on 354 NuminaMath
+problems,
+
+28
+00:01:35.638 --> 00:01:42.119
+and six open models from 2024 and 2025, from
+8B to 671B parameters.
+
+29
+00:01:42.139 --> 00:01:47.025
+For every model, the composition gap is the
+largest of the five gaps,
+
+30
+00:01:47.045 --> 00:01:49.399
+covering 33–48% of problems.
+
+31
+00:01:49.419 --> 00:01:52.913
+Our verifier is strict, so some of these are
+grading errors.
+
+32
+00:01:53.610 --> 00:01:58.586
+After removing problems that an LLM review
+flags as grading errors,
+
+33
+00:01:58.606 --> 00:02:00.321
+it still covers 24–37%.
+
+34
+00:02:01.017 --> 00:02:04.080
+What remains mixes roadmaps that miss a step,
+
+35
+00:02:04.100 --> 00:02:07.937
+with real failures to combine, like the one we
+just saw.
+
