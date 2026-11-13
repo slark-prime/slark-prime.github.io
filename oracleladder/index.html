@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OracleLadder</title>
+<meta name="description" content="LLMs can solve every step of a math problem and still fail it, even when given the roadmap and every step's answer. OracleLadder measures this composition gap. NeurIPS 2026.">
+<meta property="og:title" content="Solving Every Step Is Not Enough (OracleLadder, NeurIPS 2026)">
+<meta property="og:description" content="LLMs can solve every step of a math problem and still fail it, even when given the roadmap and every step's answer.">
+<meta property="og:image" content="https://slark-prime.github.io/oracleladder/img/og.jpg">
+<meta property="og:url" content="https://slark-prime.github.io/oracleladder/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+/* Layout: an article column with a sticky contents rail; figures are live HTML/SVG built from the paper's tables. */
+:root {
+  --bg: #FFFFFF; --panel: #F5F6F8; --rule: #E3E5EA; --ink: #15181E; --ink2: #3D434D; --muted: #687080;
+  --link: #1E46B4; --accent: #E8620E; --accent-ink: #B4480A; --pass: #13865B; --fail: #C9302C;
+  --region: rgba(30, 70, 180, .16); --region-line: #1E46B4;
+  --g-direct: #8A919E; --g-roadmap: #3B82F6; --g-exec: #8B5CF6; --g-comp: #F07A1F; --g-missing: #C99413; --g-cap: #C0392B;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111318; --panel: #1A1D24; --rule: #2B303A; --ink: #E8EAEE; --ink2: #C2C7D0; --muted: #8C93A0;
+    --link: #8DB0FF; --accent: #F28A3E; --accent-ink: #F6A466; --pass: #3CCB8F; --fail: #FF6B66;
+    --region: rgba(141, 176, 255, .18); --region-line: #8DB0FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111318; --panel: #1A1D24; --rule: #2B303A; --ink: #E8EAEE; --ink2: #C2C7D0; --muted: #8C93A0;
+  --link: #8DB0FF; --accent: #F28A3E; --accent-ink: #F6A466; --pass: #3CCB8F; --fail: #FF6B66;
+  --region: rgba(141, 176, 255, .18); --region-line: #8DB0FF;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 18px/1.62 var(--serif);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--link); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+img, svg, video { max-width: 100%; }
+p { margin: 0; }
+.sans { font-family: var(--sans); }
+
+/* Header */
+header.top { max-width: 900px; margin: 0 auto; padding-block: 56px 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; font-family: var(--sans); }
+.venue { font: 600 12.5px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-ink); }
+h1 { font: 700 clamp(30px, 5vw, 48px)/1.1 var(--sans); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+h1 small { display: block; font-weight: 500; font-size: .46em; letter-spacing: 0; color: var(--ink2); margin-top: 12px; line-height: 1.35; }
+.authors { font-size: 17px; line-height: 1.75; color: var(--ink); text-wrap: balance; }
+.authors a, .authors span { white-space: nowrap; }
+.authors a { color: var(--ink); }
+.authors sup, .affil sup { font-size: .7em; color: var(--muted); }
+.affil { font-size: 15px; color: var(--ink2); text-wrap: balance; }
+.notes { font-size: 13px; color: var(--muted); }
+.links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
+.links a { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 999px; font: 500 14.5px/1 var(--sans); text-decoration: none; color: var(--ink); border: 1px solid var(--rule); background: var(--bg); }
+.links a.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.links a:hover { border-color: var(--muted); }
+.links svg { width: 15px; height: 15px; }
+
+/* Page grid */
+.page { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 56px; padding-block: 12px 80px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font: 400 14px/1.45 var(--sans); display: flex; flex-direction: column; gap: 4px; padding-top: 6px; }
+nav.toc b { font: 600 11.5px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+nav.toc a { color: var(--ink2); text-decoration: none; padding: 4px 0 4px 10px; border-left: 2px solid transparent; }
+nav.toc a:hover { color: var(--ink); }
+nav.toc a.on { color: var(--ink); border-left-color: var(--accent); }
+article { min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+.text { max-width: 690px; display: flex; flex-direction: column; gap: 16px; }
+section { display: flex; flex-direction: column; gap: 22px; scroll-margin-top: 24px; }
+h2 { font: 700 27px/1.25 var(--sans); letter-spacing: -.012em; margin: 0; text-wrap: balance; }
+h3 { font: 600 19px/1.35 var(--sans); margin: 0; text-wrap: balance; }
+.lede { font-size: 21px; line-height: 1.55; color: var(--ink); }
+.hook { font-size: 23px; line-height: 1.5; color: var(--ink); font-style: italic; text-wrap: pretty; }
+.lede2 { font-size: 19px; line-height: 1.6; color: var(--ink2); }
+.lede b { font-weight: 600; }
+.k { color: var(--accent-ink); font-weight: 600; }
+
+figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+figcaption { font: 400 14.5px/1.55 var(--sans); color: var(--muted); max-width: 760px; }
+figcaption b { color: var(--ink2); font-weight: 600; }
+.panel { background: var(--panel); border-radius: 12px; padding: 22px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13.5px/1 var(--sans); padding: 8px 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink2); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font: 500 14px/1 var(--sans); color: var(--ink2); cursor: pointer; user-select: none; }
+.toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+/* Example */
+.ex { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.ex-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; font-family: var(--sans); }
+.problem { font: 400 16.5px/1.55 var(--serif); color: var(--ink); }
+.problem i { font-style: italic; }
+.road { display: flex; flex-direction: column; gap: 8px; }
+.ms { background: var(--bg); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.45; color: var(--ink2); display: grid; grid-template-columns: auto minmax(0,1fr); gap: 4px 10px; transition: opacity .25s; }
+.ms .tag { font: 600 12px/1 var(--mono); color: var(--link); padding-top: 3px; }
+.ms .gold { grid-column: 2; font: 500 13px/1.3 var(--mono); color: var(--pass); }
+.ms.dim { opacity: .38; }
+.ms .gold[hidden] { display: none; }
+.final { font-size: 13.5px; color: var(--muted); }
+.tries { display: flex; flex-direction: column; gap: 10px; }
+.tryrow { display: grid; grid-template-columns: 92px minmax(0,1fr); gap: 10px; align-items: center; font-size: 13.5px; color: var(--ink2); }
+.dots { display: flex; flex-wrap: wrap; gap: 5px; }
+.dot { font: 500 12px/1 var(--mono); padding: 6px 7px; border-radius: 6px; border: 1px solid; white-space: nowrap; }
+.dot.ok { color: var(--pass); border-color: color-mix(in srgb, var(--pass) 45%, transparent); background: color-mix(in srgb, var(--pass) 9%, transparent); }
+.dot.no { color: var(--fail); border-color: color-mix(in srgb, var(--fail) 45%, transparent); background: color-mix(in srgb, var(--fail) 8%, transparent); }
+.score { font: 600 15px/1.3 var(--sans); color: var(--ink); }
+.quote { font: italic 400 15.5px/1.5 var(--serif); color: var(--ink2); border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; }
+.quote span { display: block; font: 400 12.5px/1.4 var(--sans); font-style: normal; color: var(--muted); margin-top: 6px; }
+.plot { background: var(--bg); border: 1px solid var(--rule); border-radius: 12px; padding: 10px; }
+.plot svg { display: block; width: 100%; height: auto; }
+.plot text { font: 500 12px var(--mono); fill: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font: 400 13px/1.3 var(--sans); color: var(--ink2); padding: 8px 4px 2px; }
+.legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+/* Five gaps */
+.gaps { display: grid; grid-template-columns: 128px repeat(4, minmax(0, 1fr)); gap: 8px; font-family: var(--sans); }
+.gaps .h { font: 500 13px/1.35 var(--sans); color: var(--muted); text-align: center; align-self: end; padding-bottom: 2px; }
+.gaps .rh { font: 600 14px/1.3 var(--sans); color: var(--ink2); align-self: center; }
+.cell { border: 0; border-radius: 10px; padding: 14px 10px; color: #fff; text-align: center; cursor: pointer; display: flex; flex-direction: column; gap: 4px; justify-content: center; min-height: 96px; font-family: var(--sans); }
+.cell .nm { font: 600 15px/1.2 var(--sans); }
+.cell .ct { font: 600 21px/1.1 var(--mono); }
+.cell .pc { font: 400 12.5px/1 var(--mono); opacity: .9; }
+.cell[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink); }
+.gapinfo { font: 400 15px/1.55 var(--sans); color: var(--ink2); min-height: 48px; }
+.gapinfo b { color: var(--ink); }
+
+/* Bars */
+.bars { display: flex; flex-direction: column; gap: 9px; font-family: var(--sans); }
+.barrow { display: grid; grid-template-columns: 128px minmax(0, 1fr) 64px; gap: 12px; align-items: center; font-size: 14px; }
+.barrow .nm { color: var(--ink2); }
+.track { display: flex; height: 26px; border-radius: 5px; overflow: hidden; background: var(--panel); }
+.seg { height: 100%; transition: width .45s ease; }
+.seg.hatch { background-image: repeating-linear-gradient(135deg, var(--g-comp) 0 2px, transparent 2px 7px) !important; background-color: color-mix(in srgb, var(--g-comp) 18%, transparent) !important; }
+.barrow .val { font: 600 14px/1 var(--mono); color: var(--accent-ink); text-align: right; font-variant-numeric: tabular-nums; }
+.keyrow { display: flex; flex-wrap: wrap; gap: 14px; font: 400 13px/1.3 var(--sans); color: var(--ink2); }
+.keyrow i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+.svgfig svg { display: block; width: 100%; height: auto; overflow: visible; }
+.svgfig text { font-family: var(--sans); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.mini h4 { margin: 0 0 8px; font: 600 14.5px/1.3 var(--sans); color: var(--ink); }
+.mini h4 span { font-weight: 400; color: var(--muted); }
+
+/* Retest grid */
+.retest { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; font-family: var(--sans); }
+@media (max-width: 1100px) { .retest { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .retest { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fam { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 11px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); }
+.fam.clean { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--bg)); }
+.fam .id { font: 600 12.5px/1 var(--mono); color: var(--ink); }
+.fam .why { font-size: 12px; line-height: 1.35; color: var(--muted); min-height: 32px; }
+.fam .m { display: grid; grid-template-columns: 50px minmax(0,1fr) 24px; gap: 6px; align-items: center; font: 400 11.5px/1 var(--mono); color: var(--ink2); }
+.fam .m .b { height: 7px; border-radius: 4px; background: var(--panel); overflow: hidden; }
+.fam .m .b i { display: block; height: 100%; background: var(--ink2); }
+
+.three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; font-family: var(--sans); }
+.q3 { border-top: 2px solid var(--ink); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.q3 .n { font: 600 26px/1.1 var(--mono); }
+.q3 .l { font-size: 14px; line-height: 1.45; color: var(--ink2); }
+
+.media { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.media video, .media img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--rule); display: block; background: #000; }
+.media img { background: var(--panel); }
+.media .side { display: flex; flex-direction: column; gap: 10px; font: 400 15px/1.5 var(--sans); }
+ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--ink2); }
+.bib { position: relative; background: var(--panel); border-radius: 10px; }
+.bib pre { margin: 0; padding: 18px 20px; overflow-x: auto; font: 400 13.5px/1.6 var(--mono); color: var(--ink); }
+.copy { position: absolute; top: 10px; right: 10px; font: 500 13px/1 var(--sans); color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+footer { font: 400 14px/1.6 var(--sans); color: var(--muted); border-top: 1px solid var(--rule); padding-top: 22px; display: flex; flex-direction: column; gap: 6px; }
+
+@media (max-width: 960px) {
+  .page { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  nav.toc { display: none; }
+}
+@media (max-width: 720px) {
+  body { font-size: 17px; }
+  header.top { padding-block: 36px 20px; }
+  .ex, .two, .media, .three { grid-template-columns: minmax(0, 1fr); }
+  .gaps { grid-template-columns: 62px repeat(4, minmax(0, 1fr)); gap: 5px; }
+  .cell { padding: 9px 3px; min-height: 78px; }
+  .cell .nm { font-size: 10.5px; hyphens: manual; -webkit-hyphens: manual; }
+  .cell .ct { font-size: 16px; }
+  .cell .pc { font-size: 10px; overflow-wrap: anywhere; }
+  .gaps .h, .gaps .rh { font-size: 11.5px; }
+  .barrow { grid-template-columns: 92px minmax(0, 1fr) 52px; gap: 8px; font-size: 12.5px; }
+  .lede { font-size: 19px; }
+  .hook { font-size: 20px; }
+  .lede2 { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .seg, .ms { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="venue">NeurIPS 2026</span>
+  <h1>Solving Every Step Is Not Enough<small>Milestone Oracles Reveal a Composition Gap in LLM Math Reasoning</small></h1>
+  <p class="authors">
+    <a href="https://slark-prime.github.io/">Zhuohan Wang</a><sup>1*†‡</sup> ·
+    <span>Haoran Ma<sup>1*</sup></span> · <span>Tianyu Wu<sup>1*</sup></span> ·
+    <span>Yuanlin Duan<sup>2</sup></span> · <span>Zichun Liao<sup>1</sup></span> · <span>Jieming Yu<sup>3†</sup></span>
+  </p>
+  <p class="affil"><sup>1</sup>Harvard University &nbsp;·&nbsp; <sup>2</sup>Rutgers University &nbsp;·&nbsp; <sup>3</sup>The Hong Kong University of Science and Technology</p>
+  <p class="notes">*Equal contribution &nbsp; †Corresponding author &nbsp; ‡Project lead</p>
+  <nav class="links" aria-label="Resources">
+    <a class="primary" href="https://arxiv.org/abs/2609.32235"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>Paper</a>
+    <a class="primary" href="https://github.com/slark-prime/OracleLadder"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.29-1.69-1.29-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>Code &amp; Data</a>
+    <a href="#talk">Video</a>
+    <a href="files/OracleLadder_poster.pdf">Poster</a>
+    <a href="files/OracleLadder_slides.pdf">Slides</a>
+    <a href="#cite">BibTeX</a>
+  </nav>
+</header>
+
+<div class="page">
+  <nav class="toc" aria-label="Contents">
+    <b>Contents</b>
+    <a href="#example">One problem</a>
+    <a href="#method">How it works</a>
+    <a href="#gaps">Five gaps</a>
+    <a href="#largest">The largest gap</a>
+    <a href="#ranking">Accuracy hides it</a>
+    <a href="#specific">The help is real</a>
+    <a href="#training">Two RL runs</a>
+    <a href="#contains">What the gap holds</a>
+    <a href="#talk">Talk and poster</a>
+    <a href="#cite">Data and citation</a>
+  </nav>
+
+  <article>
+    <section>
+      <div class="text">
+        <p class="hook">You have probably done this yourself: you work out every piece of a hard problem and still get the answer wrong, because one piece never makes it into the final step. Language models show the same pattern, and for all six models we tested it is the most common way they fail.</p>
+        <p class="lede2">If you train, compare, or benchmark reasoning models, a wrong answer alone tells you very little. Did the model lack a plan, fumble a step, or hold every piece and fail to put them together? Each calls for a different fix.</p>
+        <p class="lede2">OracleLadder separates these cases. It holds each problem fixed and changes only what the model is told: nothing, a roadmap of the steps, or the roadmap plus the answer to every step. When a model solves every step alone and still fails with every answer in hand, we call it the <span class="k">composition gap</span>.</p>
+      </div>
+    </section>
+
+    <section id="example">
+      <div class="text">
+        <h2>One problem, four levels of help</h2>
+        <p>Qwen3-8B (a 2025 model, thinking off) answers each question 8 times. Pick a level of help to see every answer it gave.</p>
+      </div>
+      <figure>
+        <div class="panel">
+          <div class="ex">
+            <div class="ex-left">
+              <p class="problem">Through the point (2, 3) on the line <i>p</i>: <i>y</i> = 2<i>x</i> − 1, a line <i>q</i> perpendicular to <i>p</i> is drawn. Find the area of the convex quadrilateral bounded by <i>p</i>, <i>q</i>, and the coordinate axes.</p>
+              <div class="chips" role="group" aria-label="Level of help">
+                <button class="chip" id="rung-ms" data-rung="MS" type="button" aria-pressed="false">Each step alone</button>
+                <button class="chip" id="rung-c1" data-rung="C1" type="button" aria-pressed="false">No help</button>
+                <button class="chip" id="rung-c2" data-rung="C2" type="button" aria-pressed="false">+ Roadmap</button>
+                <button class="chip" id="rung-c3" data-rung="C3" type="button" aria-pressed="true">+ Step answers</button>
+              </div>
+              <div class="road" id="road">
+                <div class="ms" id="ms1"><span class="tag">M1</span><span>Line <i>q</i> has slope −1/2 and passes through (2, 3). Find its equation.</span><span class="gold" id="g1">answer given: y = −x/2 + 4</span></div>
+                <div class="ms" id="ms2"><span class="tag">M2</span><span>Substitute <i>y</i> = 0 into <i>y</i> = 2<i>x</i> − 1 to set up the <i>x</i>-intercept of <i>p</i>.</span><span class="gold" id="g2">answer given: 0 = 2x − 1</span></div>
+                <p class="final">The last step, assembling the area, stays hidden because its answer is the solution.</p>
+              </div>
+              <div class="tries" id="tries" aria-live="polite"></div>
+              <p class="score" id="score"></p>
+              <p class="quote" id="quote">“But this point isn’t on the x-axis or y-axis, so it is not part of the convex quadrilateral bounded by the four lines.”<span>Attempt 3 with both step answers in hand, about the corner (2, 3).</span></p>
+            </div>
+            <div>
+              <div class="plot">
+                <svg viewBox="0 0 440 300" role="img" aria-label="Lines p and q with the true quadrilateral and the shape the model measured">
+                  <g stroke="var(--rule)" stroke-width="1">
+                    <line x1="30" y1="290" x2="30" y2="10"/><line x1="110" y1="290" x2="110" y2="10"/><line x1="150" y1="290" x2="150" y2="10"/><line x1="190" y1="290" x2="190" y2="10"/><line x1="230" y1="290" x2="230" y2="10"/><line x1="270" y1="290" x2="270" y2="10"/><line x1="310" y1="290" x2="310" y2="10"/><line x1="350" y1="290" x2="350" y2="10"/><line x1="390" y1="290" x2="390" y2="10"/><line x1="430" y1="290" x2="430" y2="10"/>
+                    <line x1="30" y1="250" x2="430" y2="250"/><line x1="30" y1="170" x2="430" y2="170"/><line x1="30" y1="130" x2="430" y2="130"/><line x1="30" y1="90" x2="430" y2="90"/><line x1="30" y1="50" x2="430" y2="50"/><line x1="30" y1="10" x2="430" y2="10"/>
+                  </g>
+                  <g stroke="var(--muted)" stroke-width="1.4"><line x1="30" y1="210" x2="430" y2="210"/><line x1="70" y1="290" x2="70" y2="10"/></g>
+                  <polygon id="truth" points="70,210 90,210 150,90 70,50" fill="var(--region)" stroke="var(--region-line)" stroke-width="2"/>
+                  <polygon id="dart" points="70,250 90,210 390,210 70,50" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-dasharray="7 5"/>
+                  <line x1="50" y1="290" x2="190" y2="10" stroke="var(--ink)" stroke-width="2"/>
+                  <line x1="30" y1="30" x2="430" y2="230" stroke="var(--ink)" stroke-width="2"/>
+                  <text x="182" y="26" style="fill:var(--ink);font-style:italic">p</text>
+                  <text x="418" y="216" style="fill:var(--ink);font-style:italic">q</text>
+                  <g fill="var(--ink)"><circle cx="70" cy="50" r="3.5"/><circle cx="90" cy="210" r="3.5"/><circle cx="390" cy="210" r="3.5"/><circle cx="70" cy="250" r="3.5"/><circle cx="70" cy="210" r="3"/></g>
+                  <circle cx="150" cy="90" r="5" fill="var(--region-line)"/>
+                  <circle id="ring" cx="150" cy="90" r="13" fill="none" stroke="var(--accent)" stroke-width="2"/>
+                  <text x="160" y="84" style="fill:var(--ink)">(2, 3)</text>
+                  <text x="76" y="46">(0, 4)</text><text x="98" y="228">(½, 0)</text><text x="362" y="228">(8, 0)</text><text x="76" y="266">(0, −1)</text>
+                </svg>
+                <div class="legend">
+                  <span><i style="background:var(--region);border:2px solid var(--region-line)"></i>True region, area 19/4</span>
+                  <span id="dart-key"><i style="border:2px dashed var(--accent)"></i>Shape most answers measure, area 65/4</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>Figure 1.</b> Every attempt at each step alone is correct. Every attempt at the full problem is wrong, at every level of help. With both step answers given, all 8 attempts find the four axis intercepts and leave out the corner (2, 3). The most common answer, 65/4, is the area of the dashed shape. Answers are copied from the saved outputs.</figcaption>
+      </figure>
+    </section>
+
+    <section id="method">
+      <div class="text">
+        <h2>How OracleLadder works</h2>
+        <p>A teacher model (GPT-5.4 Thinking) reads each problem and its reference solution and writes one fixed roadmap of <b>milestones</b>: small standalone problems, each with a gold answer that a program can check. Automatic checks drop milestones that give the final answer away. The teacher never sees the models we test, so every model gets the same roadmap.</p>
+        <p>We then run two tests on each model. The <b>milestone test</b> asks whether the model solves each milestone alone. The <b>ladder of help</b> gives the full problem with no help (C1), with the roadmap (C2), and with the roadmap plus every milestone answer (C3). A deterministic symbolic verifier grades every answer, with no LLM judge.</p>
+      </div>
+      <figure>
+        <div class="panel" style="padding:14px;background:#fff"><img src="img/protocol.svg" alt="Protocol: the teacher builds a milestone family; Track A tests each milestone alone; Track B climbs C1, C2, C3 on the parent problem." width="842" height="482" style="display:block;width:100%;height:auto"></div>
+        <figcaption><b>Figure 2.</b> The protocol, from the paper. Track A is the milestone test. Track B is the ladder of help. The lowest rung that solves the problem gives the outcome.</figcaption>
+      </figure>
+    </section>
+
+    <section id="gaps">
+      <div class="text">
+        <h2>Two tests, five gaps</h2>
+        <p>Crossing the milestone test with the lowest rung that works sorts every failure into one of five gaps. Each gap points to a different fix. Pick a model to see its counts on 354 problems, and pick a cell to read what it means.</p>
+      </div>
+      <figure>
+        <div class="panel" style="display:flex;flex-direction:column;gap:16px">
+          <div class="chips" role="group" aria-label="Model" id="gap-models"></div>
+          <div class="gaps" id="gapgrid">
+            <span></span><span class="h">Solved with no help</span><span class="h">Needs the roadmap</span><span class="h">Needs the answers</span><span class="h">Never solved</span>
+            <span class="rh">Passes the milestone test</span>
+            <button class="cell" data-g="direct" type="button" aria-pressed="false" style="background:var(--g-direct)"><span class="nm">Direct</span><span class="ct"></span><span class="pc"></span></button>
+            <button class="cell" data-g="roadmap" type="button" aria-pressed="false" style="background:var(--g-roadmap)"><span class="nm">Roadmap gap</span><span class="ct"></span><span class="pc"></span></button>
+            <button class="cell" data-g="exec" type="button" aria-pressed="false" style="background:var(--g-exec)"><span class="nm">Mile&shy;stone-exe&shy;cution gap</span><span class="ct"></span><span class="pc"></span></button>
+            <button class="cell" data-g="comp" type="button" aria-pressed="true" style="background:var(--g-comp)"><span class="nm">Compo&shy;sition gap</span><span class="ct"></span><span class="pc"></span></button>
+            <span class="rh">Fails the milestone test</span>
+            <div class="cell" style="background:var(--g-direct);cursor:default;opacity:.55"><span class="nm">Direct</span><span class="pc">counted above</span></div>
+            <button class="cell" data-g="missing" type="button" aria-pressed="false" style="background:var(--g-missing);grid-column:span 2"><span class="nm">Missing-milestone gap</span><span class="ct"></span><span class="pc"></span></button>
+            <button class="cell" data-g="cap" type="button" aria-pressed="false" style="background:var(--g-cap)"><span class="nm">Capa&shy;bility gap</span><span class="ct"></span><span class="pc"></span></button>
+          </div>
+          <p class="gapinfo" id="gapinfo"></p>
+        </div>
+        <figcaption><b>Figure 3.</b> Counts at a 16K-token budget with 8 attempts per condition. A problem counts as solved at a rung if at least one attempt is correct. Direct solves are counted once, whatever the milestone test says.</figcaption>
+      </figure>
+    </section>
+
+    <section id="largest">
+      <div class="text">
+        <h2>Composition is the largest gap for every model</h2>
+        <p>Six open models from 2024 and 2025, from 8B to 671B parameters. For every one of them, the composition gap is the largest of the five gaps: <span class="k">33–48%</span> of the 354 problems.</p>
+        <p>Our verifier is strict, so some of these problems are grading errors. An LLM review flags 22–29% of each model's composition-gap problems as verifier or format errors. After removing them, the gap still covers <span class="k">24–37%</span>.</p>
+      </div>
+      <figure>
+        <div class="panel" style="display:flex;flex-direction:column;gap:14px">
+          <label class="toggle"><input type="checkbox" id="remove-flag"> Remove problems flagged as grading errors</label>
+          <div class="bars" id="bars"></div>
+          <div class="keyrow" id="barkey"></div>
+        </div>
+        <figcaption><b>Figure 4.</b> Share of the 354 problems in each gap. The number on the right is the composition gap. The flags come from an automated GPT-5.5 review, and each family's label is carried from the 4K to the 16K milestone test.</figcaption>
+      </figure>
+    </section>
+
+    <section id="ranking">
+      <div class="text">
+        <h2>One accuracy number hides the difference</h2>
+        <p>DeepSeek-V3.1 is right more often per attempt than gpt-oss-20b, 28.4% against 25.7%. Yet gpt-oss-20b solves more problems once milestone help is allowed: 214 against 183. It leaves more of its failures recoverable. In 1,000 bootstrap resamples of the problems, gpt-oss-20b solves the most problems in every one.</p>
+      </div>
+      <figure>
+        <div class="panel svgfig" id="scatter"></div>
+        <figcaption><b>Figure 5.</b> Per-attempt accuracy with no help against the share of problems that any rung of help solves, on the same 354 problems.</figcaption>
+      </figure>
+    </section>
+
+    <section id="specific">
+      <div class="text">
+        <h2>The help is problem-specific, and it carries over</h2>
+        <p>Is the roadmap real information, or only a longer prompt? We replace it with a roadmap from another problem, with a generic "break it into steps" prompt, or keep it and pair it with wrong answers. Only the matched roadmap lifts recovery. The same contrast holds on MATH500 and AIME 2024/25, where Qwen3-8B (thinking off) is both the screen and the student.</p>
+      </div>
+      <figure>
+        <div class="panel"><div class="three" id="spec"></div></div>
+        <figcaption><b>Figure 6.</b> Share of problems solved under each condition. Main set: MilestoneRL-2K. MATH500 uses at least 3 correct of 8 attempts, because 4 screening attempts let easy problems through. AIME uses at least 1 of 8. The pattern also holds with a second teacher (83–87% same per-problem outcome) and in a 10-problem code pilot (6.5% → 41% → 89% of attempts pass).</figcaption>
+      </figure>
+    </section>
+
+    <section id="training">
+      <div class="text">
+        <h2>Two RL runs with the same gain move different problems</h2>
+        <p>Two RLVR runs start from Qwen3-8B-Base. They gain almost the same on MATH, +20 and +18 points. One turns 30 more problems into direct solves, the other 20. The runs differ in more than the reward, so we read them as two readouts of training and do not rank the methods.</p>
+      </div>
+      <figure>
+        <div class="panel svgfig" id="rl"></div>
+        <figcaption><b>Figure 7.</b> Change in each outcome against Qwen3-8B-Base on the 354 problems. Intermediate checkpoints show both runs dropping below the starting point before they recover, which a single accuracy curve does not show.</figcaption>
+      </figure>
+    </section>
+
+    <section id="contains">
+      <div class="text">
+        <h2>What the composition gap contains</h2>
+        <p>We report three numbers separately, because each points to a different fix.</p>
+      </div>
+      <div class="three">
+        <div class="q3"><span class="n">33–48%</span><span class="l">of problems fall in the composition gap, depending on the model.</span></div>
+        <div class="q3"><span class="n">22–29%</span><span class="l">of each model's gap is flagged as grading errors: the verifier or the reference answer. That fix belongs to the benchmark.</span></div>
+        <div class="q3"><span class="n">16 of 18</span><span class="l">audited families recovered by Qwen3-8B with every answer given. The rest of the gap mixes roadmaps that miss a step with real failures to combine steps.</span></div>
+      </div>
+      <figure>
+        <div class="panel"><div class="retest" id="retest"></div></div>
+        <figcaption><b>Figure 8.</b> Raw-output retest of the 18 families that two authors labeled as genuine composition failures, with the roadmap and every milestone answer given, 8 attempts each, graded by hand. Most failures trace to the reference answer or its format. On ff548f26 (Figure 1), Qwen3-8B solves both steps alone and still fails all 8 attempts, while gpt-oss-20b solves it in 6. Bars show correct attempts out of 8 for Qwen3-8B (thinking off) and gpt-oss-20b.</figcaption>
+      </figure>
+    </section>
+
+    <section id="talk">
+      <div class="text"><h2>Talk and poster</h2></div>
+      <div class="media">
+        <video controls playsinline preload="none" poster="img/explainer_cover.jpg">
+          <source src="media/explainer.mp4" type="video/mp4">
+          <track kind="captions" src="media/explainer.vtt" srclang="en" label="English" default>
+        </video>
+        <div class="side">
+          <p>A five-minute explainer with captions. A 2-minute version is <a href="media/teaser.mp4">here</a>.</p>
+          <a href="files/OracleLadder_poster.pdf"><img src="img/poster.jpg" alt="The OracleLadder poster" loading="lazy" width="1600" height="1029"></a>
+          <p>Poster (<a href="files/OracleLadder_poster.pdf">PDF</a>) and slides (<a href="files/OracleLadder_slides.pdf">PDF</a>). Poster Session 4 in Sydney, Wed, Dec 9, 17:00–20:00 AEDT.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="cite">
+      <div class="text">
+        <h2>Data, code, and citation</h2>
+        <ul class="plain">
+          <li>The 354-problem diagnostic set with every roadmap and gold milestone answer.</li>
+          <li>Milestone-test and ladder results for all six models, the symbolic verifier, all prompts, and the audit labels.</li>
+          <li>Replication data for MATH500, AIME 2024/25, and the code pilot. Any new model can be run on the released roadmaps directly.</li>
+        </ul>
+        <p class="sans" style="font-size:15px">Everything is at <a href="https://github.com/slark-prime/OracleLadder">github.com/slark-prime/OracleLadder</a>. Code is MIT-licensed and data is CC BY 4.0.</p>
+      </div>
+      <div class="bib" style="max-width:760px">
+        <button class="copy" id="copy-bib" type="button">Copy</button>
+<pre id="bib-text">@inproceedings{wang2026oracleladder,
+  title     = {Solving Every Step Is Not Enough: Milestone Oracles Reveal
+               a Composition Gap in {LLM} Math Reasoning},
+  author    = {Wang, Zhuohan and Ma, Haoran and Wu, Tianyu and
+               Duan, Yuanlin and Liao, Zichun and Yu, Jieming},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2026},
+  eprint    = {2609.32235},
+  archivePrefix = {arXiv}
+}</pre>
+      </div>
+    </section>
+
+    <footer>
+      <p>Most training and inference in this work was funded by a Tinker research grant from Thinking Machines Lab, with compute credits from Prime Intellect.</p>
+      <p><a href="https://slark-prime.github.io/">Zhuohan Wang</a> · Last updated October 2026</p>
+    </footer>
+  </article>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  /* ---------- Figure 1: the running example (answers from the saved outputs) ---------- */
+  var TRIES = {
+    M1: ["y = −x/2 + 4","y = −x/2 + 4","y = −x/2 + 4","y = −x/2 + 4","y = −x/2 + 4","y = −x/2 + 4","y = −x/2 + 4","y = −x/2 + 4"],
+    M2: ["2x − 1 = 0","2x − 1 = 0","2x − 1 = 0","2x − 1 = 0","2x − 1 = 0","0 = 2x − 1","2x − 1 = 0","2x − 1 = 0"],
+    C1: ["65/4","16.25","65/4","65/4","17","65/4","25/4","65/4"],
+    C2: ["16","65/4","16","75/4","65/4","6","8.5","20"],
+    C3: ["65/4","85/4","23/8","75/4","65/4","65/4","17/2","18.75"]
+  };
+  function row(label, answers, ok) {
+    var r = document.createElement("div"); r.className = "tryrow";
+    var l = document.createElement("span"); l.textContent = label; r.appendChild(l);
+    var d = document.createElement("div"); d.className = "dots";
+    answers.forEach(function (a) { var s = document.createElement("span"); s.className = "dot " + (ok ? "ok" : "no"); s.textContent = a; d.appendChild(s); });
+    r.appendChild(d); return r;
+  }
+  function setRung(rung) {
+    document.querySelectorAll("[data-rung]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.rung === rung)); });
+    var tries = $("tries"); tries.innerHTML = "";
+    var showRoad = rung !== "C1";
+    $("ms1").classList.toggle("dim", !showRoad); $("ms2").classList.toggle("dim", !showRoad);
+    $("g1").hidden = !(rung === "C3" || rung === "MS"); $("g2").hidden = !(rung === "C3" || rung === "MS");
+    $("g1").textContent = rung === "MS" ? "gold answer: y = −x/2 + 4" : "answer given: y = −x/2 + 4";
+    $("g2").textContent = rung === "MS" ? "gold answer: 0 = 2x − 1" : "answer given: 0 = 2x − 1";
+    if (rung === "MS") {
+      tries.appendChild(row("M1 alone", TRIES.M1, true));
+      tries.appendChild(row("M2 alone", TRIES.M2, true));
+      $("score").textContent = "8 of 8 correct on each step.";
+    } else {
+      tries.appendChild(row("Full problem", TRIES[rung], false));
+      $("score").textContent = "0 of 8 correct. The true area is 19/4.";
+    }
+    $("quote").hidden = rung !== "C3";
+    var full = rung !== "MS";
+    $("dart").style.display = full ? "" : "none"; $("dart-key").style.display = full ? "" : "none"; $("ring").style.display = full ? "" : "none";
+  }
+  document.querySelectorAll("[data-rung]").forEach(function (b) { b.addEventListener("click", function () { setRung(b.dataset.rung); }); });
+  setRung("C3");
+
+  /* ---------- Figures 3 and 4: five gaps (paper Table: per-model taxonomy, 16K) ---------- */
+  var GAPS = [
+    { k: "direct", label: "Direct", color: "var(--g-direct)",
+      info: "<b>Direct.</b> At least one of 8 attempts solves the problem with no help." },
+    { k: "roadmap", label: "Roadmap gap", color: "var(--g-roadmap)",
+      info: "<b>Roadmap gap.</b> The model solves every milestone alone, and the roadmap is enough. What it lacked was the plan." },
+    { k: "exec", label: "Milestone-execution gap", color: "var(--g-exec)",
+      info: "<b>Milestone-execution gap.</b> The model solves every milestone alone, but inside the full problem it needs the milestone answers. It can plan, and it fails to carry out a step in context." },
+    { k: "comp", label: "Composition gap", color: "var(--g-comp)",
+      info: "<b>Composition gap.</b> The model solves every milestone alone, yet no rung of help solves the problem, not even the roadmap with every answer. Check the verifier and the roadmap first, then look at how the model combines steps." },
+    { k: "missing", label: "Missing-milestone gap", color: "var(--g-missing)",
+      info: "<b>Missing-milestone gap.</b> The model fails some milestone alone, and the roadmap or its answers fill that step in." },
+    { k: "cap", label: "Capability gap", color: "var(--g-cap)",
+      info: "<b>Capability gap.</b> The model fails some milestone alone, and no rung of help solves the problem." }
+  ];
+  var MODELS = [
+    { n: "Qwen3-8B-Base", c: [76, 42, 23, 171, 11, 31], after: 36.7, acc: 5.4, any: 42.9 },
+    { n: "OutcomeRL-2K", c: [106, 44, 9, 155, 11, 29], after: 32.5, acc: 10.7, any: 48.0 },
+    { n: "MilestoneRL-2K", c: [96, 40, 19, 167, 10, 22], after: 36.4, acc: 10.6, any: 46.6 },
+    { n: "gpt-oss-20b", c: [161, 33, 14, 118, 6, 22], after: 24.3, acc: 25.7, any: 60.5 },
+    { n: "Llama-3.3-70B", c: [52, 38, 21, 171, 15, 57], after: 37.0, acc: 7.8, any: 35.6 },
+    { n: "DeepSeek-V3.1", c: [143, 25, 6, 125, 9, 46], after: 25.4, acc: 28.4, any: 51.7 }
+  ];
+  var N = 354, cur = 3, curGap = "comp";
+  var gm = $("gap-models");
+  MODELS.forEach(function (m, i) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.id = "gm-" + i;
+    b.textContent = m.n; b.setAttribute("aria-pressed", String(i === cur));
+    b.addEventListener("click", function () { cur = i; paintGaps(); }); gm.appendChild(b);
+  });
+  function paintGaps() {
+    gm.querySelectorAll(".chip").forEach(function (b, i) { b.setAttribute("aria-pressed", String(i === cur)); });
+    var m = MODELS[cur];
+    document.querySelectorAll("#gapgrid button.cell").forEach(function (cell) {
+      var idx = GAPS.findIndex(function (g) { return g.k === cell.dataset.g; });
+      cell.querySelector(".ct").textContent = m.c[idx];
+      cell.querySelector(".pc").textContent = (100 * m.c[idx] / N).toFixed(1) + "%";
+      cell.setAttribute("aria-pressed", String(cell.dataset.g === curGap));
+    });
+    $("gapinfo").innerHTML = GAPS.find(function (g) { return g.k === curGap; }).info;
+  }
+  document.querySelectorAll("#gapgrid button.cell").forEach(function (cell) {
+    cell.addEventListener("click", function () { curGap = cell.dataset.g; paintGaps(); });
+  });
+  paintGaps();
+
+  var bars = $("bars");
+  MODELS.forEach(function (m, i) {
+    var r = document.createElement("div"); r.className = "barrow";
+    r.innerHTML = '<span class="nm"></span><div class="track"></div><span class="val"></span>';
+    r.querySelector(".nm").textContent = m.n;
+    var tr = r.querySelector(".track");
+    GAPS.forEach(function (g, j) {
+      var s = document.createElement("div"); s.className = "seg"; s.style.background = g.color; s.title = g.label + ": " + m.c[j];
+      s.dataset.j = j; tr.appendChild(s);
+      if (g.k === "comp") { var h = document.createElement("div"); h.className = "seg hatch"; h.dataset.j = "flag"; h.title = "Flagged as grading errors"; tr.appendChild(h); }
+    });
+    bars.appendChild(r);
+  });
+  var key = $("barkey");
+  GAPS.forEach(function (g) { var s = document.createElement("span"); s.innerHTML = '<i style="background:' + g.color + '"></i>' + g.label; key.appendChild(s); });
+  var hk = document.createElement("span"); hk.id = "flagkey"; hk.innerHTML = '<i style="background:repeating-linear-gradient(135deg,var(--g-comp) 0 2px,transparent 2px 6px)"></i>Flagged as grading errors'; key.appendChild(hk);
+  function paintBars() {
+    var rm = $("remove-flag").checked;
+    $("flagkey").style.display = rm ? "" : "none";
+    bars.querySelectorAll(".barrow").forEach(function (r, i) {
+      var m = MODELS[i], before = 100 * m.c[3] / N;
+      r.querySelectorAll(".seg").forEach(function (s) {
+        if (s.dataset.j === "flag") { s.style.width = (rm ? before - m.after : 0) + "%"; return; }
+        var j = +s.dataset.j, w = 100 * m.c[j] / N;
+        if (j === 3 && rm) w = m.after;
+        s.style.width = w + "%";
+      });
+      r.querySelector(".val").textContent = (rm ? m.after : before).toFixed(1) + "%";
+    });
+  }
+  $("remove-flag").addEventListener("change", paintBars);
+  paintBars();
+
+  /* ---------- Figure 5: accuracy vs recovery ---------- */
+  (function () {
+    var W = 720, H = 360, L = 64, R = 24, T = 20, B = 52;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Scatter of per-attempt accuracy against problems solved by any help" }, $("scatter"));
+    var x = function (v) { return L + (v / 32) * (W - L - R); }, y = function (v) { return H - B - ((v - 30) / 35) * (H - T - B); };
+    for (var gx = 0; gx <= 30; gx += 10) { el("line", { x1: x(gx), y1: T, x2: x(gx), y2: H - B, stroke: "var(--rule)" }, svg); el("text", { x: x(gx), y: H - B + 20, "text-anchor": "middle", "font-size": 12.5, fill: "var(--muted)" }, svg, gx + "%"); }
+    for (var gy = 30; gy <= 65; gy += 10) { el("line", { x1: L, y1: y(gy), x2: W - R, y2: y(gy), stroke: "var(--rule)" }, svg); el("text", { x: L - 10, y: y(gy) + 4, "text-anchor": "end", "font-size": 12.5, fill: "var(--muted)" }, svg, gy + "%"); }
+    el("text", { x: (L + W - R) / 2, y: H - 10, "text-anchor": "middle", "font-size": 13.5, fill: "var(--ink2)" }, svg, "Per-attempt accuracy, no help");
+    el("text", { x: 16, y: (T + H - B) / 2, "text-anchor": "middle", "font-size": 13.5, fill: "var(--ink2)", transform: "rotate(-90 16 " + (T + H - B) / 2 + ")" }, svg, "Problems solved by any rung");
+    var ds = MODELS[5], go = MODELS[3];
+    el("line", { x1: x(ds.acc), y1: y(ds.any), x2: x(go.acc), y2: y(go.any), stroke: "var(--accent)", "stroke-width": 1.5, "stroke-dasharray": "4 4" }, svg);
+    var off = { "Qwen3-8B-Base": [10, 4], "OutcomeRL-2K": [-10, -6], "MilestoneRL-2K": [10, 14], "gpt-oss-20b": [-12, -12], "Llama-3.3-70B": [10, 4], "DeepSeek-V3.1": [-12, 20] };
+    MODELS.forEach(function (m) {
+      var hi = m === ds || m === go;
+      el("circle", { cx: x(m.acc), cy: y(m.any), r: hi ? 7 : 5.5, fill: hi ? "var(--accent)" : "var(--ink2)" }, svg);
+      var o = off[m.n], anchor = o[0] < 0 ? "end" : "start";
+      el("text", { x: x(m.acc) + o[0], y: y(m.any) + o[1], "text-anchor": anchor, "font-size": 13.5, fill: hi ? "var(--ink)" : "var(--ink2)", "font-weight": hi ? 600 : 400 }, svg, m.n + " (" + m.acc + "%, " + m.any + "%)");
+    });
+  })();
+
+  /* ---------- Figure 6: specificity across datasets (paper Table 2) ---------- */
+  (function () {
+    var CONDS = ["No help", "Wrong-problem roadmap", "Generic prompt", "Matched roadmap", "Roadmap + wrong answers", "Roadmap + answers"];
+    var MATCHED = [false, false, false, true, false, true];
+    var SETS = [
+      { t: "Main set", s: "354 problems", n: 354, v: [96, 78, 96, 123, 119, 140] },
+      { t: "MATH500", s: "35 problems", n: 35, v: [3, 2, 2, 15, 13, 15] },
+      { t: "AIME 2024/25", s: "38 problems", n: 38, v: [2, 5, 5, 17, 14, 15] }
+    ];
+    SETS.forEach(function (st) {
+      var wrap = document.createElement("div"); wrap.className = "mini";
+      wrap.innerHTML = "<h4></h4>"; wrap.querySelector("h4").innerHTML = st.t + " <span>" + st.s + "</span>";
+      var W = 300, H = 244, L = 8, T = 18, B = 26, bw = 34, gap = (W - 2 * L - 6 * bw) / 5, max = 50;
+      var svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": st.t + " problems solved under each condition" }, wrap);
+      el("line", { x1: 0, y1: H - B, x2: W, y2: H - B, stroke: "var(--muted)" }, svg);
+      st.v.forEach(function (v, i) {
+        var pct = 100 * v / st.n, h = (pct / max) * (H - T - B), xx = L + i * (bw + gap);
+        el("rect", { x: xx, y: H - B - h, width: bw, height: Math.max(h, 1), rx: 3, fill: MATCHED[i] ? (i === 3 ? "var(--g-roadmap)" : "var(--pass)") : "var(--g-direct)", opacity: MATCHED[i] ? 1 : (i === 0 ? .85 : .45) }, svg);
+        el("text", { x: xx + bw / 2, y: H - B + 18, "text-anchor": "middle", "font-size": 12, fill: "var(--muted)" }, svg, String(i + 1));
+        el("text", { x: xx + bw / 2, y: H - B - h - 6, "text-anchor": "middle", "font-size": 12.5, "font-weight": MATCHED[i] ? 600 : 400, fill: "var(--ink2)" }, svg, Math.round(pct) + "%");
+      });
+      $("spec").appendChild(wrap);
+    });
+    var leg = document.createElement("div"); leg.className = "keyrow"; leg.style.gridColumn = "1 / -1";
+    CONDS.forEach(function (c, i) {
+      var col = MATCHED[i] ? (i === 3 ? "var(--g-roadmap)" : "var(--pass)") : "var(--g-direct)";
+      var s = document.createElement("span"); s.innerHTML = '<i style="background:' + col + ';opacity:' + (MATCHED[i] ? 1 : (i === 0 ? .85 : .45)) + '"></i>' + (i + 1) + ". " + c; leg.appendChild(s);
+    });
+    $("spec").appendChild(leg);
+  })();
+
+  /* ---------- Figure 7: two RL runs (paper Table: endpoint numbers) ---------- */
+  (function () {
+    var ROWS = [["MATH score (points)", 20.0, 18.0], ["Direct", 30, 20], ["Needs the roadmap", 0, -3], ["Needs the answers", -12, -4], ["Solved by any rung", 18, 13]];
+    var W = 720, rowH = 46, T = 34, H = T + ROWS.length * rowH + 10, mid = 430, scale = 7;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Change per outcome for the two RL runs" }, $("rl"));
+    el("line", { x1: mid, y1: T - 8, x2: mid, y2: H - 6, stroke: "var(--muted)" }, svg);
+    el("rect", { x: mid + 70, y: 6, width: 12, height: 12, rx: 2, fill: "var(--g-roadmap)" }, svg); el("text", { x: mid + 88, y: 16, "font-size": 13, fill: "var(--ink2)" }, svg, "OutcomeRL-2K");
+    el("rect", { x: mid + 190, y: 6, width: 12, height: 12, rx: 2, fill: "var(--g-exec)" }, svg); el("text", { x: mid + 208, y: 16, "font-size": 13, fill: "var(--ink2)" }, svg, "MilestoneRL-2K");
+    ROWS.forEach(function (r, i) {
+      var y0 = T + i * rowH;
+      el("text", { x: 0, y: y0 + 22, "font-size": 14, fill: "var(--ink2)" }, svg, r[0]);
+      [[r[1], "var(--g-roadmap)", 4], [r[2], "var(--g-exec)", 22]].forEach(function (b) {
+        var v = b[0], w = Math.abs(v) * scale, xx = v >= 0 ? mid : mid - w;
+        el("rect", { x: xx, y: y0 + b[2], width: Math.max(w, 1.5), height: 15, rx: 2, fill: b[1] }, svg);
+        el("text", { x: v >= 0 ? mid + w + 6 : mid - w - 6, y: y0 + b[2] + 12, "text-anchor": v >= 0 ? "start" : "end", "font-size": 12.5, "font-family": "var(--mono)", fill: "var(--ink2)" }, svg, (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v));
+      });
+    });
+  })();
+
+  /* ---------- Figure 8: raw-output retest of the 18 audited families ---------- */
+  (function () {
+    var F = [
+      ["ff548f26", "No reference issue", 0, 6, true], ["0ad0ce27", "No reference issue", 1, 8, true],
+      ["eeab310c", "No reference issue", 7, 7, true], ["a0146340", "No reference issue", 8, 8, true],
+      ["a0759695", "Wrong reference and milestone answers", 0, 7], ["ad098d0c", "Two-part question, verifier reads the last box", 8, 8],
+      ["713ff8c1", "Wrong reference answer", 8, 6], ["a3a636a8", "Malformed reference", 8, 8], ["330cbc5a", "Malformed reference", 7, 8],
+      ["c52e7627", "Reference lists one of two solutions", 7, 7], ["5ce4a16b", "Two-part reference answer", 8, 8],
+      ["20dfe8b1", "Letter reference, answer given as value", 6, 8], ["60f12f06", "Letter reference", 7, 7],
+      ["29eb7827", "Asks for an order, reference is an expression", 1, 1], ["40a06b35", "Answer is a condition in words", 8, 5],
+      ["cb760e44", "Hyperbolic-function notation", 8, 8], ["2e647bfc", "Answer boxed as an equation", 8, 7],
+      ["723ca360", "Extra text in the boxed answer", 6, 8]
+    ];
+    F.forEach(function (f) {
+      var d = document.createElement("div"); d.className = "fam" + (f[0] === "ff548f26" ? " clean" : "");
+      d.innerHTML = '<span class="id"></span><span class="why"></span>' +
+        '<span class="m"><span>Qwen3</span><span class="b"><i></i></span><span></span></span>' +
+        '<span class="m"><span>gpt-oss</span><span class="b"><i></i></span><span></span></span>';
+      d.querySelector(".id").textContent = f[0]; d.querySelector(".why").textContent = f[1];
+      var ms = d.querySelectorAll(".m");
+      [f[2], f[3]].forEach(function (v, i) { ms[i].querySelector("i").style.width = (100 * v / 8) + "%"; ms[i].lastChild.textContent = v + "/8"; });
+      $("retest").appendChild(d);
+    });
+  })();
+
+  /* ---------- contents highlight ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+  var targets = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  function spy() {
+    var y = window.scrollY + 120, on = 0;
+    targets.forEach(function (t, i) { if (t && t.offsetTop <= y) on = i; });
+    links.forEach(function (a, i) { a.classList.toggle("on", i === on); });
+  }
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+
+  /* ---------- BibTeX copy ---------- */
+  var btn = $("copy-bib"), pre = $("bib-text");
+  function selectText() { var r = document.createRange(); r.selectNodeContents(pre); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+  btn.addEventListener("click", function () {
+    var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(pre.textContent).then(done, function () { selectText(); btn.textContent = "Press ⌘C"; });
+    else { selectText(); btn.textContent = "Press ⌘C"; }
+  });
+})();
+</script>
+</body>
+</html>
